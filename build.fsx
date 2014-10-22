@@ -7,9 +7,8 @@ open Fake.FscHelper
 Target "flit" (fun () -> 
     
     ["flit.fs";] |> Fsc (fun p -> { p with FscTarget = Exe; 
-                                           References = [@"tools\FSharp.CLI\lib\net45\FSharp.CLI.dll"] 
+                                           References = [ @"tools\FSharp.CLI\lib\net45\FSharp.CLI.dll" ] 
                                   } )
-
 )
 
 RunTargetOrDefault "flit"
