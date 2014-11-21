@@ -37,12 +37,12 @@ _*)
 urdar
 abc(*_abc_*)cde""" 
 
-let text2 = "(*_abc_*)(*_cdef_*)"
+let text2 = "(*_abc_*)(*_cdef_*)abc"
 
-let parse f =
+let parse =
     between (pstring """(*_""") (pstring """_*)""") (CharParsers.charsTillString """_*)""" false System.Int32.MaxValue)
 
-let literate f = many ((attempt <| (CharParsers.charsTillString """(*_""" false System.Int32.MaxValue .>>. parse f))) .>>. (manyTill anyChar eof) 
+let literate = many (attempt <| CharParsers.charsTillString """(*_""" false System.Int32.MaxValue .>>. parse) .>>. manyTill anyChar eof
                  |>> (fun (xs,last) -> let code = List.concat [List.map fst xs; [System.String.Concat(last |> List.toArray)]] |> String.concat ""
                                        let comments = List.map snd xs |> String.concat ""
                                        code,comments )
@@ -53,21 +53,23 @@ let test p str =
         printfn "Success: %A" result
     | Failure(errorMsg, _, _) -> printfn "Failure: %s" errorMsg
 
-let extractComments = test (literate (fun a b -> (a,b)))
-
+let extractComments = test literate
 
 let convertTo (sourceFile : string) (targetFile  : string) =
     printfn "convert: %s to %s" sourceFile targetFile
     if not <| File.Exists sourceFile 
     then printfn "could not find input file: %s" sourceFile
          None
-    else 
+    else
         let str = File.ReadAllText sourceFile
-        Some str
+        printfn "parsing: %s" sourceFile
+        match run literate str with
+            | Success((code,comments), _, _)   ->
+                if extension targetFile = ".fs" then Some code else Some comments
+            | Failure(errorMsg, _, _) -> printfn "Failure: %s" errorMsg; None
 
 
-[<EntryPoint>]
-let main args = 
+let run args =
     let pUsage () = printfn "usage %s" usage; 2
     match parser args with
         | Some settings -> 
@@ -86,3 +88,10 @@ let main args =
                 printfn "unsupported file ending."
                 pUsage()
         | None -> pUsage () 
+
+
+let pwd (s : string) = System.IO.Path.Combine (__SOURCE_DIRECTORY__, s)
+let runOnMe () = run [| pwd "example.fs" ; "-o"; pwd "example2.fs"; pwd "example.tex" |]
+
+[<EntryPoint>]
+let main args = run args

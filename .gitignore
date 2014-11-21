@@ -3,3 +3,4 @@ bin
 obj
 flit.exe
 /packages
+/LiterateFSharp.v12.suo
