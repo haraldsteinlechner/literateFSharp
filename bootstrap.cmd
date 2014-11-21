@@ -8,4 +8,4 @@ REM mklink .\.git\hooks\pre-commit .\pre-commit
 "nuget\nuget.exe"  "install" "FParsec" "-OutputDirectory" "tools" "-ExcludeVersion" "-Prerelease"
 )
 
-"tools\FAKE\tools\Fake.exe" "build.fsx" "target=flit"
+"tools\FAKE\tools\Fake.exe" "build.fsx" %*

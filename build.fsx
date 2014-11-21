@@ -11,4 +11,15 @@ Target "flit" (fun () ->
                                   } )
 )
 
+Target "RestorePackages" (fun () ->
+
+    let packageConfigs = !!"**/packages.config" 
+
+    let defaultNuGetSources = RestorePackageHelper.RestorePackageDefaults.Sources
+    for pc in packageConfigs do
+        RestorePackage (fun p -> { p with OutputPath = "packages" }) pc
+
+
+)
+
 RunTargetOrDefault "flit"
