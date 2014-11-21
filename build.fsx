@@ -11,6 +11,23 @@ Target "flit" (fun () ->
                                   } )
 )
 
+Target "Build" (fun () ->
+  let buildMode = getBuildParamOrDefault "buildMode" "Release"
+  let setParams defaults =
+          { defaults with
+              Verbosity = Some(Quiet)
+              Targets = ["Build"]
+              Properties =
+                  [
+                      "Optimize", "True"
+                      "DebugSymbols", "True"
+                      "Configuration", buildMode
+                  ]
+           }
+  build setParams "./LiterateFSharp.sln"
+        |> DoNothing
+)
+
 Target "RestorePackages" (fun () ->
 
     let packageConfigs = !!"**/packages.config" 

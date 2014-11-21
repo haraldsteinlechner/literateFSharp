@@ -9,6 +9,7 @@
 open FSharp.CLI
 open System.IO
 open System.Collections.Generic
+open FParsec
 
 type LiterateCLI = {
     
@@ -28,9 +29,32 @@ let endsWith (suffix : string) (s : string) = s.EndsWith suffix
 
 let toFile (fileName : string) (content : string) = File.WriteAllText (fileName,content)
 
-(*_ 
+let text = """
+abc
+def(*_ 
 \textbf{Hello World}
 _*)
+urdar
+abc(*_abc_*)cde""" 
+
+let text2 = "(*_abc_*)(*_cdef_*)"
+
+let parse f =
+    between (pstring """(*_""") (pstring """_*)""") (CharParsers.charsTillString """_*)""" false System.Int32.MaxValue)
+
+let literate f = many ((attempt <| (CharParsers.charsTillString """(*_""" false System.Int32.MaxValue .>>. parse f))) .>>. (manyTill anyChar eof) 
+                 |>> (fun (xs,last) -> let code = List.concat [List.map fst xs; [System.String.Concat(last |> List.toArray)]] |> String.concat ""
+                                       let comments = List.map snd xs |> String.concat ""
+                                       code,comments )
+
+let test p str =
+    match run p str with
+    | Success(result, _, _)   ->
+        printfn "Success: %A" result
+    | Failure(errorMsg, _, _) -> printfn "Failure: %s" errorMsg
+
+let extractComments = test (literate (fun a b -> (a,b)))
+
 
 let convertTo (sourceFile : string) (targetFile  : string) =
     printfn "convert: %s to %s" sourceFile targetFile
